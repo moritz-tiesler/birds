@@ -2,6 +2,7 @@ import streamlit as st
 import cv2
 from ultralytics import YOLO
 import numpy as np
+from datetime import datetime
 
 # --- Configuration ---
 FLASK_STREAM_URL = 'http://192.168.2.38:5000/video_feed'
@@ -36,7 +37,33 @@ try:
                 results = model.track(frame, persist=True, conf=0.7, verbose=False)
 
                 # Plot results onto the frame
-                annotated_frame = results[0].plot()
+                result = results[0]
+                annotated_frame = result.plot()
+
+                class_ids = result.boxes.cls.tolist()
+                class_name_map = result.names
+
+                detected_classes = []
+
+                for class_id in class_ids:
+                    # Convert the numerical ID to its string name using the map
+                    class_name = class_name_map[class_id]
+                    detected_classes.append(class_name)
+
+
+                if 'bird' in detected_classes:
+                # Create a filename based on the current timestamp
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename = f"detection_frame_{timestamp}.jpg"
+
+                    # Save the annotated frame (NumPy array) using OpenCV
+                    # annotated_frame is already a BGR NumPy array (standard OpenCV format)
+                    cv2.imwrite(filename, frame)
+                    print(f"{timestamp}: saved bird")
+                    # st.sidebar.success(f"Saved frame to {filename}")
+
+                    # Reset the button state to prevent continuous saving (optional, but cleaner)
+                    # save_button = False
 
                 # Convert BGR frame to RGB for Streamlit display
                 annotated_frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
