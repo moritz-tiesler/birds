@@ -3,6 +3,8 @@ import cv2
 import time
 import numpy as np
 
+import sys
+
 def detect_birds_yolov8_batched_with_skipping(
     video_path,
     confidence_threshold=0.5,
@@ -125,7 +127,9 @@ def detect_birds_yolov8_batched_with_skipping(
     return land_timestamps
 
 # Example Usage:
-video_file = '2025-10-21-074016.webm'
+# video_file = '2025-10-21-074016.webm'
+video_file = sys.argv[1]
+
 start_time = time.time()
 bird_landings = detect_birds_yolov8_batched_with_skipping(
     video_file,
