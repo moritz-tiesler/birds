@@ -7,6 +7,7 @@ from datetime import datetime
 # --- Configuration ---
 FLASK_STREAM_URL = 'http://192.168.2.38:5000/video_feed'
 MODEL_PATH = "yolov8n.pt"
+FAIL_CAP = 100
 
 # --- Streamlit Setup ---
 st.title("YOLOv8 Live Inference from Flask Stream")
@@ -29,12 +30,14 @@ try:
         model = YOLO(MODEL_PATH, task="detect")
 
         # 3. Main Loop
-        while cap.isOpened() and not stop_button:
+        read_fails = 0
+        while cap.isOpened() and not stop_button and read_fails < FAIL_CAP:
             success, frame = cap.read()
 
             if success:
+                read_fails = 0
                 # Run detection
-                results = model.track(frame, persist=True, conf=0.7, verbose=False)
+                results = model.track(frame, persist=True, conf=0.5, verbose=False)
 
                 # Plot results onto the frame
                 result = results[0]
@@ -75,8 +78,10 @@ try:
                     caption="Live YOLO Detection"
                 )
             else:
+                read_fails += 1
                 st.warning("Stream ended or frame reading failed.")
-                break
+                print(f"{timestamp}: failed to read frame, skipping. fails: {read_fails}/{FAIL_CAP}")
+                # break
 
 except Exception as e:
     st.error(f"An error occurred during streaming: {e}")
