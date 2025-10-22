@@ -32,6 +32,7 @@ try:
         # 3. Main Loop
         read_fails = 0
         while cap.isOpened() and not stop_button and read_fails < FAIL_CAP:
+            # TODO: logic for reopening video caputre after hitting fail cap?
             success, frame = cap.read()
 
             if success:
@@ -57,13 +58,13 @@ try:
                 if 'bird' in detected_classes:
                 # Create a filename based on the current timestamp
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"detection_frame_{timestamp}.jpg"
+                    filename = f"captures/detection_frame_{timestamp}.jpg"
 
                     # Save the annotated frame (NumPy array) using OpenCV
                     # annotated_frame is already a BGR NumPy array (standard OpenCV format)
                     cv2.imwrite(filename, frame)
                     print(f"{timestamp}: saved bird")
-                    # st.sidebar.success(f"Saved frame to {filename}")
+                    st.sidebar.success(f"{timestamp}: Saved frame to {filename}")
 
                     # Reset the button state to prevent continuous saving (optional, but cleaner)
                     # save_button = False
