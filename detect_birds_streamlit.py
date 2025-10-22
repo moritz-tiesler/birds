@@ -3,11 +3,20 @@ import cv2
 from ultralytics import YOLO
 import numpy as np
 from datetime import datetime
+import sys
+
+frame_count = 0
+
+def report(data: str) -> None:
+
+    # Print the string followed by '\r' to return the cursor to the beginning
+    sys.stdout.write(f"\r{data}")
+    sys.stdout.flush()
 
 # --- Configuration ---
 FLASK_STREAM_URL = 'http://192.168.2.38:5000/video_feed'
 MODEL_PATH = "yolov8n.pt"
-FAIL_CAP = 100
+FAIL_CAP = 1
 
 # --- Streamlit Setup ---
 st.title("YOLOv8 Live Inference from Flask Stream")
@@ -31,7 +40,10 @@ try:
 
         # 3. Main Loop
         read_fails = 0
-        while cap.isOpened() and not stop_button and read_fails < FAIL_CAP:
+        while cap.isOpened() and not stop_button:
+            if read_fails >= FAIL_CAP:
+                cap.release()
+                cap = cv2.VideoCapture(FLASK_STREAM_URL, cv2.CAP_FFMPEG)
             # TODO: logic for reopening video caputre after hitting fail cap?
             success, frame = cap.read()
 
@@ -57,13 +69,16 @@ try:
 
                 if 'bird' in detected_classes:
                 # Create a filename based on the current timestamp
+                    # TODO: use tracked id to distinguish detected birds?
+                    #   result.boxes.id
+                    #   detection_frame-id_{n}-{date}.jpg
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     filename = f"captures/detection_frame_{timestamp}.jpg"
 
                     # Save the annotated frame (NumPy array) using OpenCV
                     # annotated_frame is already a BGR NumPy array (standard OpenCV format)
                     cv2.imwrite(filename, frame)
-                    print(f"{timestamp}: saved bird")
+                    print(f"\n{timestamp}: saved bird")
                     st.sidebar.success(f"{timestamp}: Saved frame to {filename}")
 
                     # Reset the button state to prevent continuous saving (optional, but cleaner)
@@ -78,14 +93,21 @@ try:
                     channels="RGB",
                     caption="Live YOLO Detection"
                 )
+
+                frame_count += 1
+                report(f"{frame_count} frames")
+
             else:
                 read_fails += 1
+                frame_count = 0
                 st.warning("Stream ended or frame reading failed.")
-                print(f"{timestamp}: failed to read frame, skipping. fails: {read_fails}/{FAIL_CAP}")
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                print(f"\n{timestamp}: failed to read frame, skipping. fails: {read_fails}/{FAIL_CAP}")
                 # break
 
 except Exception as e:
     st.error(f"An error occurred during streaming: {e}")
+    print(f"An error occurred during streaming: {e}")
 
 finally:
     if 'cap' in locals() and cap.isOpened():
