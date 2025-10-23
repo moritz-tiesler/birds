@@ -91,7 +91,7 @@ try:
                     # TODO: use tracked id to distinguish detected birds?
                     #   result.boxes.id
                     #   detection_frame-id_{n}-{date}.jpg
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S%f")
                     filename = f"captures/detection_frame_{timestamp}.jpg"
 
                     # Save the annotated frame (NumPy array) using OpenCV
