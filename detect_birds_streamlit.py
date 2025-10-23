@@ -97,7 +97,7 @@ try:
                     # Save the annotated frame (NumPy array) using OpenCV
                     # annotated_frame is already a BGR NumPy array (standard OpenCV format)
                     cv2.imwrite(filename, frame)
-                    print(f"\n{timestamp}: saved bird")
+                    print(f"\n🐦{timestamp}: saved bird")
                     st.sidebar.success(f"{timestamp}: Saved frame to {filename}")
 
                     # Reset the button state to prevent continuous saving (optional, but cleaner)
