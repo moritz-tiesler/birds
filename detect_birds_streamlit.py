@@ -5,6 +5,23 @@ import numpy as np
 from datetime import datetime
 import sys
 import time
+import argparse
+import os
+
+parser = argparse.ArgumentParser()
+
+# use app args like this:
+#   streamlit run detect_birds_streamlit.py -- --stream
+parser.add_argument('--stream', action='store_true', default=False,
+                    help="Stream frames via streamlit app")
+
+try:
+    args = parser.parse_args()
+except SystemExit as e:
+    # This exception will be raised if --help or invalid command line arguments
+    # are used. Currently streamlit prevents the program from exiting normally
+    # so we have to do a hard exit.
+    os._exit(e.code)
 
 frame_count = 0
 
@@ -90,11 +107,12 @@ try:
                 annotated_frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
 
                 # Update the placeholder with the new frame
-                live_feed_placeholder.image(
-                    annotated_frame_rgb,
-                    channels="RGB",
-                    caption="Live YOLO Detection"
-                )
+                if args.stream:
+                    live_feed_placeholder.image(
+                        annotated_frame_rgb,
+                        channels="RGB",
+                        caption="Live YOLO Detection"
+                    )
 
                 frame_count += 1
                 report(f"{frame_count} frames")
