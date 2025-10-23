@@ -4,6 +4,7 @@ from ultralytics import YOLO
 import numpy as np
 from datetime import datetime
 import sys
+import time
 
 frame_count = 0
 
@@ -15,7 +16,7 @@ def report(data: str) -> None:
 
 # --- Configuration ---
 FLASK_STREAM_URL = 'http://192.168.2.38:5000/video_feed'
-MODEL_PATH = "yolov8n.pt"
+MODEL_PATH = "yolov8n.onnx"
 FAIL_CAP = 1
 
 # --- Streamlit Setup ---
@@ -43,6 +44,7 @@ try:
         while cap.isOpened() and not stop_button:
             if read_fails >= FAIL_CAP:
                 cap.release()
+                time.sleep(1)
                 cap = cv2.VideoCapture(FLASK_STREAM_URL, cv2.CAP_FFMPEG)
             # TODO: logic for reopening video caputre after hitting fail cap?
             success, frame = cap.read()
@@ -50,7 +52,7 @@ try:
             if success:
                 read_fails = 0
                 # Run detection
-                results = model.track(frame, persist=True, conf=0.5, verbose=False)
+                results = model.track(frame, persist=False, conf=0.5, verbose=False)
 
                 # Plot results onto the frame
                 result = results[0]
@@ -96,6 +98,11 @@ try:
 
                 frame_count += 1
                 report(f"{frame_count} frames")
+
+                del annotated_frame
+                del annotated_frame_rgb
+                del result
+                del results
 
             else:
                 read_fails += 1
